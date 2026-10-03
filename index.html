@@ -1,4 +1,4 @@
-```html
+
 <!DOCTYPE html>
 <html lang="tr">
 
@@ -19,200 +19,495 @@
     <title>30 Saniye Kronometre</title>
 
 
-    <style>
+<style>
 
-        * {
-            box-sizing: border-box;
+    * {
+        box-sizing: border-box;
+    }
+
+
+    html {
+        background: #0b0d10;
+    }
+
+
+    body {
+
+        margin: 0;
+
+        padding: 20px;
+
+        min-height: 100vh;
+
+        font-family:
+            Arial,
+            Helvetica,
+            sans-serif;
+
+        background:
+            radial-gradient(
+                circle at 50% 35%,
+                #20242a 0%,
+                #111418 42%,
+                #0b0d10 100%
+            );
+
+        color: #ffffff;
+
+        display: flex;
+
+        justify-content: center;
+
+        align-items: center;
+
+    }
+
+
+    .kronometre {
+
+        width: 100%;
+
+        max-width: 500px;
+
+        padding: 30px 22px 24px;
+
+        text-align: center;
+
+        background: rgba(
+            255,
+            255,
+            255,
+            0.035
+        );
+
+        border: 1px solid rgba(
+            255,
+            255,
+            255,
+            0.08
+        );
+
+        border-radius: 28px;
+
+        box-shadow:
+            0 20px 60px rgba(
+                0,
+                0,
+                0,
+                0.45
+            );
+
+        backdrop-filter: blur(10px);
+
+    }
+
+
+    h1 {
+
+        margin: 0 0 32px;
+
+        font-size: 18px;
+
+        font-weight: 600;
+
+        letter-spacing: 1.5px;
+
+        color: #b8bdc5;
+
+        text-transform: uppercase;
+
+    }
+
+
+    /*
+       ANA KRONOMETRE
+    */
+
+    #sure {
+
+        font-size:
+            clamp(
+                64px,
+                18vw,
+                100px
+            );
+
+        font-weight: 700;
+
+        letter-spacing: 3px;
+
+        line-height: 1;
+
+        white-space: nowrap;
+
+        font-variant-numeric:
+            tabular-nums;
+
+        text-shadow:
+            0 4px 25px rgba(
+                0,
+                0,
+                0,
+                0.35
+            );
+
+    }
+
+
+    /*
+       SALİSE
+    */
+
+    #salise {
+
+        margin-top: 10px;
+
+        font-size:
+            clamp(
+                24px,
+                7vw,
+                34px
+            );
+
+        font-weight: 500;
+
+        color: #777e89;
+
+        letter-spacing: 2px;
+
+        font-variant-numeric:
+            tabular-nums;
+
+    }
+
+
+    /*
+       25-30 GÖSTERGESİ
+    */
+
+    #sayac {
+
+        height: 105px;
+
+        margin-top: 26px;
+
+        font-size:
+            clamp(
+                58px,
+                17vw,
+                86px
+            );
+
+        font-weight: 700;
+
+        line-height: 1;
+
+        display: flex;
+
+        justify-content: center;
+
+        align-items: center;
+
+        color: #ffffff;
+
+        font-variant-numeric:
+            tabular-nums;
+
+    }
+
+
+    /*
+       30 SANİYE ANİMASYONU
+    */
+
+    .otuzAnimasyon {
+
+        animation:
+            buyu
+            0.6s
+            ease-in-out;
+
+    }
+
+
+    @keyframes buyu {
+
+        0% {
+
+            transform:
+                scale(1);
+
+            text-shadow:
+                0 0 0 rgba(
+                    255,
+                    255,
+                    255,
+                    0
+                );
+
         }
 
 
+        40% {
+
+            transform:
+                scale(1.8);
+
+            text-shadow:
+                0 0 35px rgba(
+                    255,
+                    255,
+                    255,
+                    0.65
+                );
+
+        }
+
+
+        70% {
+
+            transform:
+                scale(1.2);
+
+        }
+
+
+        100% {
+
+            transform:
+                scale(1);
+
+            text-shadow:
+                0 0 0 rgba(
+                    255,
+                    255,
+                    255,
+                    0
+                );
+
+        }
+
+    }
+
+
+    /*
+       BUTONLAR
+    */
+
+.baslatButonu {
+
+    background: rgba(
+        255,
+        255,
+        255,
+        0.16
+    );
+
+    border-color: rgba(
+        255,
+        255,
+        255,
+        0.22
+    );
+
+    font-size: 17px;
+
+}
+
+
+.duraklatButonu {
+
+    background: rgba(
+        255,
+        255,
+        255,
+        0.07
+    );
+
+}
+
+
+.sifirlaButonu {
+
+    background: rgba(
+        255,
+        255,
+        255,
+        0.035
+    );
+
+    color: #8f959e;
+
+}
+
+    .butonlar {
+
+        display: flex;
+
+        gap: 10px;
+
+        margin-top: 32px;
+
+    }
+
+
+    button {
+
+        flex: 1;
+
+        min-height: 58px;
+
+        padding:
+            0
+            10px;
+
+        border: 1px solid rgba(
+            255,
+            255,
+            255,
+            0.08
+        );
+
+        border-radius: 15px;
+
+        font-size: 16px;
+
+        font-weight: 600;
+
+        color: #ffffff;
+
+        background: rgba(
+            255,
+            255,
+            255,
+            0.07
+        );
+
+        box-shadow:
+            0 5px 15px rgba(
+                0,
+                0,
+                0,
+                0.2
+            );
+
+        cursor: pointer;
+
+        touch-action: manipulation;
+
+        transition:
+            transform 0.12s ease,
+            background 0.12s ease;
+
+    }
+
+
+    button:active {
+
+        transform:
+            scale(0.95);
+
+        background: rgba(
+            255,
+            255,
+            255,
+            0.14
+        );
+
+    }
+
+
+    /*
+       TELEFON YATAY
+    */
+
+    @media (orientation: landscape) {
+
         body {
 
-            margin: 0;
-
-            padding: 20px;
-
-            min-height: 100vh;
-
-            font-family: Arial, sans-serif;
-
-            background: #111;
-
-            color: white;
-
-            display: flex;
-
-            justify-content: center;
-
-            align-items: center;
+            padding: 10px;
 
         }
 
 
         .kronometre {
 
-            width: 100%;
-
-            max-width: 500px;
-
-            text-align: center;
+            padding:
+                18px
+                22px;
 
         }
 
 
         h1 {
 
-            font-size: 26px;
-
-            margin-bottom: 40px;
-
-        }
-
-
-        #sure {
-
-            font-size: clamp(60px, 18vw, 100px);
-
-            font-weight: bold;
-
-            letter-spacing: 2px;
-
-            white-space: nowrap;
-
-        }
-
-
-        #salise {
-
-            font-size: clamp(28px, 8vw, 40px);
-
-            color: #aaa;
-
-            margin-top: 5px;
+            margin-bottom: 18px;
 
         }
 
 
         #sayac {
 
-            height: 100px;
+            margin-top: 10px;
 
-            margin-top: 25px;
-
-            font-size: clamp(60px, 18vw, 90px);
-
-            font-weight: bold;
-
-            display: flex;
-
-            justify-content: center;
-
-            align-items: center;
-
-        }
-
-
-        .otuzAnimasyon {
-
-            animation: buyu 0.6s ease-in-out;
-
-        }
-
-
-        @keyframes buyu {
-
-            0% {
-                transform: scale(1);
-            }
-
-            40% {
-                transform: scale(1.8);
-            }
-
-            70% {
-                transform: scale(1.2);
-            }
-
-            100% {
-                transform: scale(1);
-            }
+            height: 70px;
 
         }
 
 
         .butonlar {
 
-            display: flex;
+            margin-top: 15px;
 
-            gap: 10px;
+        }
 
-            margin-top: 35px;
+    }
+
+
+    /*
+       KÜÇÜK TELEFONLAR
+    */
+
+    @media (max-width: 380px) {
+
+        .kronometre {
+
+            padding:
+                25px
+                15px
+                20px;
+
+            border-radius: 22px;
+
+        }
+
+
+        h1 {
+
+            font-size: 16px;
+
+        }
+
+
+        .butonlar {
+
+            gap: 7px;
 
         }
 
 
         button {
 
-            flex: 1;
+            font-size: 14px;
 
-            min-height: 60px;
-
-            border: none;
-
-            border-radius: 12px;
-
-            font-size: 18px;
-
-            font-weight: bold;
-
-            cursor: pointer;
-
-            touch-action: manipulation;
+            min-height: 55px;
 
         }
 
+    }
 
-        button:active {
+</style>
 
-            transform: scale(0.96);
-
-        }
-
-
-        @media (orientation: landscape) {
-
-            body {
-
-                padding: 10px;
-
-            }
-
-
-            h1 {
-
-                margin-bottom: 10px;
-
-            }
-
-
-            #sayac {
-
-                margin-top: 5px;
-
-                height: 70px;
-
-            }
-
-
-            .butonlar {
-
-                margin-top: 10px;
-
-            }
-
-        }
-
-    </style>
 
 </head>
 
@@ -238,24 +533,35 @@
     <div id="sayac"></div>
 
 
-    <div class="butonlar">
+<div class="butonlar">
 
-        <button onclick="baslat()">
-            Başlat
-        </button>
+    <button
+        class="duraklatButonu"
+        onclick="durdur()">
 
-        <button onclick="durdur()">
-            Duraklat
-        </button>
+        Duraklat
 
-        <button onclick="sifirla()">
-            Sıfırla
-        </button>
+    </button>
 
-    </div>
+
+    <button
+        class="baslatButonu"
+        onclick="baslat()">
+
+        Başlat
+
+    </button>
+
+
+    <button
+        class="sifirlaButonu"
+        onclick="sifirla()">
+
+        Sıfırla
+
+    </button>
 
 </div>
-
 
 
 <script>
@@ -1097,4 +1403,3 @@ if (
 </body>
 
 </html>
-```
