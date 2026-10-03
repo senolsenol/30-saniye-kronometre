@@ -1,7 +1,7 @@
 const CACHE_NAME = "kronometre-v1";
 
 const DOSYALAR = [
-    "./kronometre.html",
+    "./index.html",
     "./manifest.json"
 ];
 
