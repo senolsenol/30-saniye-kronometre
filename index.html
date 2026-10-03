@@ -1,14 +1,15 @@
+```html
 <!DOCTYPE html>
 <html lang="tr">
+
 <head>
-    <head>
+
     <meta charset="UTF-8">
 
     <link rel="manifest" href="manifest.json">
 
     <meta name="theme-color" content="#111111">
 
-    <!-- Telefon ekranına uyum -->
     <meta name="viewport"
           content="width=device-width,
                    initial-scale=1.0,
@@ -17,14 +18,18 @@
 
     <title>30 Saniye Kronometre</title>
 
+
     <style>
 
         * {
             box-sizing: border-box;
         }
 
+
         body {
+
             margin: 0;
+
             padding: 20px;
 
             min-height: 100vh;
@@ -32,31 +37,40 @@
             font-family: Arial, sans-serif;
 
             background: #111;
+
             color: white;
 
             display: flex;
+
             justify-content: center;
+
             align-items: center;
+
         }
 
 
         .kronometre {
+
             width: 100%;
+
             max-width: 500px;
 
             text-align: center;
+
         }
 
 
         h1 {
+
             font-size: 26px;
+
             margin-bottom: 40px;
+
         }
 
 
-        /* Ana süre */
-
         #sure {
+
             font-size: clamp(60px, 18vw, 100px);
 
             font-weight: bold;
@@ -64,23 +78,23 @@
             letter-spacing: 2px;
 
             white-space: nowrap;
+
         }
 
 
-        /* Salise */
-
         #salise {
+
             font-size: clamp(28px, 8vw, 40px);
 
             color: #aaa;
 
             margin-top: 5px;
+
         }
 
 
-        /* 25-30 sayacı */
-
         #sayac {
+
             height: 100px;
 
             margin-top: 25px;
@@ -94,10 +108,9 @@
             justify-content: center;
 
             align-items: center;
+
         }
 
-
-        /* 30 saniye animasyonu */
 
         .otuzAnimasyon {
 
@@ -127,8 +140,6 @@
         }
 
 
-        /* Butonlar */
-
         .butonlar {
 
             display: flex;
@@ -136,6 +147,7 @@
             gap: 10px;
 
             margin-top: 35px;
+
         }
 
 
@@ -156,6 +168,7 @@
             cursor: pointer;
 
             touch-action: manipulation;
+
         }
 
 
@@ -166,25 +179,35 @@
         }
 
 
-        /* Telefon yatay tutulursa */
-
         @media (orientation: landscape) {
 
             body {
+
                 padding: 10px;
+
             }
+
 
             h1 {
+
                 margin-bottom: 10px;
+
             }
+
 
             #sayac {
+
                 margin-top: 5px;
+
                 height: 70px;
+
             }
 
+
             .butonlar {
+
                 margin-top: 10px;
+
             }
 
         }
@@ -237,28 +260,63 @@
 
 <script>
 
-    let baslangicZamani = null;
 
-    let toplamSure = 0;
+/* =====================================================
+   KRONOMETRE DEĞİŞKENLERİ
+   ===================================================== */
 
-    let zamanlayici = null;
+let baslangicZamani = null;
 
-    let sonSaniye = 0;
+let toplamSure = 0;
 
-    let wakeLock = null;
+let zamanlayici = null;
+
+let sonSaniye = 0;
+
+
+/* =====================================================
+   WAKE LOCK
+   ===================================================== */
+
+let wakeLock = null;
+
+
+/*
+   Ekranı açık tut
+*/
 
 async function ekranAcikTut() {
 
     try {
 
-        if ("wakeLock" in navigator) {
+        if (
+            "wakeLock" in navigator &&
+            document.visibilityState === "visible"
+        ) {
 
             wakeLock =
                 await navigator.wakeLock.request("screen");
 
+
+            /*
+               Sistem Wake Lock'u bırakırsa
+               tekrar alınabilmesi için takip ediyoruz.
+            */
+
+            wakeLock.addEventListener(
+                "release",
+                function() {
+
+                    wakeLock = null;
+
+                }
+            );
+
         }
 
-    } catch (hata) {
+    }
+
+    catch (hata) {
 
         console.log(
             "Ekran açık tutma kullanılamadı:",
@@ -269,11 +327,26 @@ async function ekranAcikTut() {
 
 }
 
+
+/*
+   Ekranı açık tutmayı bırak
+*/
+
 async function ekranAcikTutBirak() {
 
     if (wakeLock !== null) {
 
-        await wakeLock.release();
+        try {
+
+            await wakeLock.release();
+
+        }
+
+        catch (hata) {
+
+            console.log(hata);
+
+        }
 
         wakeLock = null;
 
@@ -281,337 +354,747 @@ async function ekranAcikTutBirak() {
 
 }
 
-   function baslat() {
 
-    if (zamanlayici !== null) {
-        return;
+/*
+   Uygulama tekrar görünür olduğunda
+   Wake Lock'u yeniden al.
+*/
+
+document.addEventListener(
+    "visibilitychange",
+    async function() {
+
+        if (
+            document.visibilityState === "visible" &&
+            zamanlayici !== null
+        ) {
+
+            await ekranAcikTut();
+
+        }
+
+    }
+);
+
+
+
+/* =====================================================
+   SES SİSTEMİ
+   ===================================================== */
+
+
+/*
+   30 saniyelik ses döngüsünü oluşturacak
+   HTML Audio nesnesi.
+*/
+
+let sesDosyasi = null;
+
+
+/*
+   Ses sisteminin hazır olup olmadığını takip eder.
+*/
+
+let sesHazir = false;
+
+
+
+/*
+   WAV dosyası oluşturma yardımcı fonksiyonu
+*/
+
+function wavOlustur() {
+
+    const orneklemeHizi = 44100;
+
+    const sure = 30;
+
+    const toplamOrnek =
+        orneklemeHizi * sure;
+
+
+    /*
+       Mono 16-bit PCM
+    */
+
+    const buffer =
+        new ArrayBuffer(
+            44 + toplamOrnek * 2
+        );
+
+
+    const view =
+        new DataView(buffer);
+
+
+    function yazString(offset, string) {
+
+        for (
+            let i = 0;
+            i < string.length;
+            i++
+        ) {
+
+            view.setUint8(
+                offset + i,
+                string.charCodeAt(i)
+            );
+
+        }
+
     }
 
-    ekranAcikTut();
+
+    yazString(0, "RIFF");
+
+    view.setUint32(
+        4,
+        36 + toplamOrnek * 2,
+        true
+    );
+
+    yazString(8, "WAVE");
+
+    yazString(12, "fmt ");
+
+    view.setUint32(
+        16,
+        16,
+        true
+    );
+
+    view.setUint16(
+        20,
+        1,
+        true
+    );
+
+    view.setUint16(
+        22,
+        1,
+        true
+    );
+
+    view.setUint32(
+        24,
+        orneklemeHizi,
+        true
+    );
+
+    view.setUint32(
+        28,
+        orneklemeHizi * 2,
+        true
+    );
+
+    view.setUint16(
+        32,
+        2,
+        true
+    );
+
+    view.setUint16(
+        34,
+        16,
+        true
+    );
+
+    yazString(36, "data");
+
+    view.setUint32(
+        40,
+        toplamOrnek * 2,
+        true
+    );
+
+
+    /*
+       Ses dalgasını oluştur.
+    */
+
+    for (
+        let i = 0;
+        i < toplamOrnek;
+        i++
+    ) {
+
+        const zaman =
+            i / orneklemeHizi;
+
+
+        let genlik = 0;
+
+
+        /*
+           25. saniye
+        */
+
+        if (zaman >= 25.00 && zaman < 25.10) {
+
+            genlik =
+                Math.sin(
+                    2 *
+                    Math.PI *
+                    800 *
+                    (zaman - 25)
+                ) * 0.25;
+
+        }
+
+
+        /*
+           26. saniye
+        */
+
+        else if (
+            zaman >= 26.00 &&
+            zaman < 26.10
+        ) {
+
+            genlik =
+                Math.sin(
+                    2 *
+                    Math.PI *
+                    800 *
+                    (zaman - 26)
+                ) * 0.25;
+
+        }
+
+
+        /*
+           27. saniye
+        */
+
+        else if (
+            zaman >= 27.00 &&
+            zaman < 27.10
+        ) {
+
+            genlik =
+                Math.sin(
+                    2 *
+                    Math.PI *
+                    800 *
+                    (zaman - 27)
+                ) * 0.25;
+
+        }
+
+
+        /*
+           28. saniye
+        */
+
+        else if (
+            zaman >= 28.00 &&
+            zaman < 28.10
+        ) {
+
+            genlik =
+                Math.sin(
+                    2 *
+                    Math.PI *
+                    800 *
+                    (zaman - 28)
+                ) * 0.25;
+
+        }
+
+
+        /*
+           29. saniye
+        */
+
+        else if (
+            zaman >= 29.00 &&
+            zaman < 29.10
+        ) {
+
+            genlik =
+                Math.sin(
+                    2 *
+                    Math.PI *
+                    800 *
+                    (zaman - 29)
+                ) * 0.25;
+
+        }
+
+
+        /*
+           30. saniyeye yakın güçlü ses.
+           Döngünün sonuna çok yakın.
+        */
+
+        else if (
+            zaman >= 29.50 &&
+            zaman < 30.00
+        ) {
+
+            genlik =
+                Math.sin(
+                    2 *
+                    Math.PI *
+                    1000 *
+                    (zaman - 29.50)
+                ) * 0.50;
+
+        }
+
+
+        /*
+           Yumuşak giriş/çıkış
+        */
+
+        let sesDegeri =
+            genlik;
+
+
+        /*
+           16-bit PCM
+        */
+
+        let deger =
+            Math.max(
+                -1,
+                Math.min(
+                    1,
+                    sesDegeri
+                )
+            );
+
+
+        view.setInt16(
+            44 + i * 2,
+            deger * 32767,
+            true
+        );
+
+    }
+
+
+    return new Blob(
+        [buffer],
+        {
+            type: "audio/wav"
+        }
+    );
+
+}
+
+
+
+/*
+   Ses dosyasını hazırla.
+*/
+
+function sesSisteminiHazirla() {
+
+    if (sesHazir) {
+
+        return;
+
+    }
+
+
+    const wav =
+        wavOlustur();
+
+
+    const url =
+        URL.createObjectURL(wav);
+
+
+    sesDosyasi =
+        new Audio(url);
+
+
+    /*
+       30 saniyelik döngü
+    */
+
+    sesDosyasi.loop = true;
+
+
+    /*
+       Telefon ses seviyesini
+       maksimuma zorlamıyoruz.
+    */
+
+    sesDosyasi.volume = 1;
+
+
+    sesHazir = true;
+
+}
+
+
+
+/* =====================================================
+   BAŞLAT
+   ===================================================== */
+
+async function baslat() {
+
+    if (zamanlayici !== null) {
+
+        return;
+
+    }
+
+
+    /*
+       Ses sistemini kullanıcı dokunuşu sırasında
+       hazırlıyoruz.
+    */
+
+    sesSisteminiHazirla();
+
+
+    /*
+       Sesin mevcut kronometre saniyesine
+       göre doğru yerden başlamasını sağla.
+    */
+
+    if (sesDosyasi !== null) {
+
+        const mevcutSaniye =
+            Math.floor(
+                toplamSure / 1000
+            );
+
+
+        sesDosyasi.currentTime =
+            mevcutSaniye % 30;
+
+
+        try {
+
+            await sesDosyasi.play();
+
+        }
+
+        catch (hata) {
+
+            console.log(
+                "Ses başlatılamadı:",
+                hata
+            );
+
+        }
+
+    }
+
+
+    /*
+       Ekranı açık tut.
+    */
+
+    await ekranAcikTut();
+
+
+    /*
+       Kronometreyi başlat.
+    */
 
     baslangicZamani =
         performance.now() - toplamSure;
 
+
     zamanlayici =
         requestAnimationFrame(guncelle);
+
 }
 
 
- function durdur() {
+
+/* =====================================================
+   DURAKLAT
+   ===================================================== */
+
+function durdur() {
 
     if (zamanlayici !== null) {
 
         toplamSure =
-            performance.now() - baslangicZamani;
+            performance.now() -
+            baslangicZamani;
 
-        cancelAnimationFrame(zamanlayici);
+
+        cancelAnimationFrame(
+            zamanlayici
+        );
+
 
         zamanlayici = null;
 
+
+        /*
+           Ses durdur.
+        */
+
+        if (sesDosyasi !== null) {
+
+            sesDosyasi.pause();
+
+        }
+
+
+        /*
+           Ekran kilidini bırak.
+        */
+
         ekranAcikTutBirak();
+
     }
+
 }
 
 
-    function sifirla() {
 
-        durdur();
+/* =====================================================
+   SIFIRLA
+   ===================================================== */
 
-        toplamSure = 0;
+function sifirla() {
 
-        sonSaniye = 0;
-
-
-        document.getElementById("sure")
-            .textContent = "00:00";
+    durdur();
 
 
-        document.getElementById("salise")
-            .textContent = ".00";
+    toplamSure = 0;
+
+    sonSaniye = 0;
 
 
-        document.getElementById("sayac")
-            .textContent = "";
+    document.getElementById("sure")
+        .textContent = "00:00";
 
 
-        document.getElementById("sayac")
-            .classList.remove("otuzAnimasyon");
+    document.getElementById("salise")
+        .textContent = ".00";
+
+
+    document.getElementById("sayac")
+        .textContent = "";
+
+
+    document.getElementById("sayac")
+        .classList.remove(
+            "otuzAnimasyon"
+        );
+
+
+    /*
+       Ses döngüsünü başa al.
+    */
+
+    if (sesDosyasi !== null) {
+
+        sesDosyasi.currentTime = 0;
 
     }
 
+}
 
 
-    function guncelle(zaman) {
 
-        toplamSure =
-            zaman - baslangicZamani;
+/* =====================================================
+   KRONOMETRE GÜNCELLEME
+   ===================================================== */
 
-
-        let toplamMilisaniye =
-            Math.floor(toplamSure);
+function guncelle(zaman) {
 
 
-        let toplamSaniye =
-            Math.floor(
-                toplamMilisaniye / 1000
-            );
+    toplamSure =
+        zaman -
+        baslangicZamani;
 
 
-        let dakika =
-            Math.floor(
-                toplamSaniye / 60
-            );
+    const toplamMilisaniye =
+        Math.floor(
+            toplamSure
+        );
 
 
-        let saniye =
-            toplamSaniye % 60;
+    const toplamSaniye =
+        Math.floor(
+            toplamMilisaniye / 1000
+        );
 
 
-        let salise =
-            Math.floor(
-                (toplamMilisaniye % 1000) / 10
-            );
+    const dakika =
+        Math.floor(
+            toplamSaniye / 60
+        );
+
+
+    const saniye =
+        toplamSaniye % 60;
+
+
+    const salise =
+        Math.floor(
+            (toplamMilisaniye % 1000) / 10
+        );
+
+
+    /*
+       Ana süre
+    */
+
+    document.getElementById("sure")
+        .textContent =
+
+        String(dakika)
+            .padStart(2, "0")
+
+        + ":"
+
+        + String(saniye)
+            .padStart(2, "0");
+
+
+
+    /*
+       Salise
+    */
+
+    document.getElementById("salise")
+        .textContent =
+
+        "."
+
+        + String(salise)
+            .padStart(2, "0");
+
+
+
+    /*
+       Yeni saniyeye geçildi mi?
+    */
+
+    if (
+        toplamSaniye !== sonSaniye
+    ) {
+
+        sonSaniye =
+            toplamSaniye;
+
+
+        const periyot =
+            toplamSaniye % 30;
 
 
 
         /*
-        Ana süre
+           25-29
         */
 
-        document.getElementById("sure")
-            .textContent =
+        if (
+            periyot >= 25 &&
+            periyot <= 29
+        ) {
 
-            String(dakika).padStart(2, "0")
-
-            + ":"
-
-            + String(saniye).padStart(2, "0");
-
-
-
-        /*
-        Salise
-        */
-
-        document.getElementById("salise")
-            .textContent =
-
-            "."
-
-            + String(salise).padStart(2, "0");
-
-
-
-        /*
-        Her yeni saniye
-        */
-
-        if (toplamSaniye !== sonSaniye) {
-
-            sonSaniye =
-                toplamSaniye;
-
-
-            let periyot =
-                toplamSaniye % 30;
-
-
-
-            /*
-            25-29 saniye
-            */
-
-            if (
-                periyot >= 25 &&
-                periyot <= 29
-            ) {
-
-                let sayac =
-                    document.getElementById("sayac");
-
-
-                sayac.textContent =
-                    periyot;
-
-
-                kisaSes();
-
-            }
-
-
-
-            /*
-            30. saniye
-            */
-
-            if (
-                periyot === 0 &&
-                toplamSaniye > 0
-            ) {
-
-                let sayac =
-                    document.getElementById("sayac");
-
-
-                sayac.textContent =
-                    "30";
-
-
-                /*
-                Animasyonu yeniden başlat
-                */
-
-                sayac.classList.remove(
-                    "otuzAnimasyon"
+            const sayac =
+                document.getElementById(
+                    "sayac"
                 );
 
 
-                void sayac.offsetWidth;
-
-
-                sayac.classList.add(
-                    "otuzAnimasyon"
-                );
-
-
-                /*
-                Güçlü ses
-                */
-
-                gucluSes();
-
-            }
+            sayac.textContent =
+                periyot;
 
         }
 
 
 
-        if (zamanlayici !== null) {
+        /*
+           30. saniye
+        */
 
-            zamanlayici =
-                requestAnimationFrame(
-                    guncelle
+        if (
+            periyot === 0 &&
+            toplamSaniye > 0
+        ) {
+
+            const sayac =
+                document.getElementById(
+                    "sayac"
                 );
+
+
+            sayac.textContent =
+                "30";
+
+
+            /*
+               Animasyonu yeniden başlat
+            */
+
+            sayac.classList.remove(
+                "otuzAnimasyon"
+            );
+
+
+            void sayac.offsetWidth;
+
+
+            sayac.classList.add(
+                "otuzAnimasyon"
+            );
 
         }
 
     }
 
 
-
     /*
-    Kısa bip
+       Kronometre devam ediyorsa
+       tekrar güncelle.
     */
 
-    function kisaSes() {
+    if (
+        zamanlayici !== null
+    ) {
 
-        let ses =
-            new AudioContext();
-
-
-        let oscillator =
-            ses.createOscillator();
-
-
-        let gain =
-            ses.createGain();
-
-
-        oscillator.connect(gain);
-
-        gain.connect(
-            ses.destination
-        );
-
-
-        oscillator.frequency.value =
-            800;
-
-
-        gain.gain.value =
-            0.2;
-
-
-        oscillator.start();
-
-
-
-        setTimeout(function() {
-
-            oscillator.stop();
-
-            ses.close();
-
-        }, 100);
+        zamanlayici =
+            requestAnimationFrame(
+                guncelle
+            );
 
     }
 
-
-
-    /*
-    30. saniyedeki güçlü bip
-    */
-
-    function gucluSes() {
-
-        let ses =
-            new AudioContext();
-
-
-        let oscillator =
-            ses.createOscillator();
-
-
-        let gain =
-            ses.createGain();
-
-
-        oscillator.connect(gain);
-
-        gain.connect(
-            ses.destination
-        );
-
-
-        oscillator.frequency.value =
-            1000;
-
-
-        gain.gain.value =
-            0.5;
-
-
-        oscillator.start();
+}
 
 
 
-        setTimeout(function() {
+/* =====================================================
+   SERVICE WORKER
+   ===================================================== */
 
-            oscillator.stop();
+if (
+    "serviceWorker" in navigator
+) {
 
-            ses.close();
-
-        }, 500);
-
-    }
-
-</script>
-
-<script>
-
-    if ("serviceWorker" in navigator) {
-
-        window.addEventListener("load", function() {
+    window.addEventListener(
+        "load",
+        function() {
 
             navigator.serviceWorker.register(
                 "./service-worker.js"
             );
 
-        });
+        }
+    );
 
-    }
+}
+
 
 </script>
 
+
 </body>
+
 </html>
+```
