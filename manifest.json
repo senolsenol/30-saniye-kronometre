@@ -1,0 +1,18 @@
+{
+    "name": "30 Saniye Kronometre",
+    "short_name": "30 Saniye",
+    "description": "30 saniye aralıklarla sesli uyarı veren kronometre",
+    "start_url": "./kronometre.html",
+    "display": "standalone",
+    "background_color": "#111111",
+    "theme_color": "#111111",
+    "orientation": "portrait",
+    "icons": [
+        {
+            "src": "./icon.svg",
+            "sizes": "512x512",
+            "type": "image/svg+xml",
+            "purpose": "any"
+        }
+    ]
+}
